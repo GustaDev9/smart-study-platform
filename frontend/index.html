@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ENEM Study Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <style>
+    /* ── RESET & VARIABLES ─────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0b0f1a;
+      --surface: #111827;
+      --surface2: #1a2236;
+      --border: #1f2d45;
+      --text: #e8edf5;
+      --muted: #64748b;
+      --accent: #3b82f6;
+      --accent-glow: rgba(59,130,246,0.25);
+      --green: #10b981;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --purple: #8b5cf6;
+      --font-display: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+      --radius: 12px;
+      --radius-lg: 20px;
+      --transition: 0.2s ease;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE TEXTURE ─────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: 0.6;
+    }
+
+    /* ── LAYOUT ────────────────────────────────── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+    /* ── SCREENS ───────────────────────────────── */
+    .screen { display: none; min-height: 100vh; }
+    .screen.active { display: block; }
+
+    /* ── AUTH SCREEN ───────────────────────────── */
+    #auth-screen {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 32px 16px;
+    }
+    #auth-screen.active { display: flex; }
+
+    .auth-wrapper {
+      width: 100%;
+      max-width: 440px;
+    }
+
+    .auth-logo {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .auth-logo .logo-icon {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+      margin: 0 auto 16px;
+      box-shadow: 0 0 40px var(--accent-glow);
+    }
+    .auth-logo h1 {
+      font-family: var(--font-display);
+      font-size: 28px; font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .auth-logo p { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+    .auth-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 36px;
+    }
+
+    .auth-tabs {
+      display: flex;
+      background: var(--bg);
+      border-radius: var(--radius);
+      padding: 4px;
+      margin-bottom: 28px;
+    }
+    .auth-tab {
+      flex: 1; padding: 10px;
+      border: none; background: transparent;
+      color: var(--muted); font-family: var(--font-body);
+      font-size: 14px; font-weight: 500;
+      border-radius: 8px; cursor: pointer;
+      transition: var(--transition);
+    }
+    .auth-tab.active {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    .form-group { margin-bottom: 18px; }
+    .form-group label {
+      display: block; font-size: 13px; font-weight: 500;
+      color: var(--muted); margin-bottom: 8px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .form-group input {
+      width: 100%; padding: 12px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text); font-family: var(--font-body); font-size: 15px;
+      outline: none;
+      transition: border-color var(--transition);
+    }
+    .form-group input:focus { border-color: var(--accent); }
+
+    .btn-primary {
+      width: 100%; padding: 14px;
+      background: var(--accent);
+      color: #fff; font-family: var(--font-display);
+      font-size: 15px; font-weight: 700;
+      border: none; border-radius: var(--radius);
+      cursor: pointer; letter-spacing: 0.3px;
+      transition: opacity var(--transition), transform var(--transition);
+      margin-top: 8px;
+    }
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .auth-error {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #fca5a5; border-radius: var(--radius);
+      padding: 12px 16px; font-size: 13px;
+      margin-bottom: 16px; display: none;
+    }
+
+    /* ── APP SHELL ─────────────────────────────── */
+    #app-screen { display: none; flex-direction: column; }
+    #app-screen.active { display: flex; }
+
+    /* ── NAVBAR ────────────────────────────────── */
+    .navbar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(11,15,26,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+    }
+    .navbar-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+    }
+    .nav-logo {
+      font-family: var(--font-display);
+      font-weight: 800; font-size: 18px;
+      letter-spacing: -0.3px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .nav-logo span { font-size: 20px; }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .nav-user {
+      font-size: 14px; color: var(--muted);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .nav-avatar {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px;
+    }
+    .btn-ghost {
+      padding: 8px 14px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted); font-family: var(--font-body);
+      font-size: 13px; border-radius: 8px; cursor: pointer;
+      transition: var(--transition);
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--text); }
+
+    /* ── APP CONTENT ───────────────────────────── */
+    .app-content { flex: 1; padding: 40px 24px; max-width: 1100px; margin: 0 auto; width: 100%; }
+
+    /* ── VIEW SYSTEM ───────────────────────────── */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ── DASHBOARD VIEW ────────────────────────── */
+    .dashboard-header {
+      margin-bottom: 40px;
+    }
+    .dashboard-header .greeting {
+      font-size: 13px; color: var(--accent);
+      font-weight: 500; text-transform: uppercase;
+      letter-spacing: 1px; margin-bottom: 8px;
+    }
+    .dashboard-header h2 {
+      font-family: var(--font-display);
+      font-size: 36px; font-weight: 800;
+      letter-spacing: -1px; line-height: 1.1;
+    }
+    .dashboard-header p { color: var(--muted); margin-top: 8px; font-size: 15px; }
+
+    /* ── STATS ROW ─────────────────────────────── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px; margin-bottom: 40px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      position: relative; overflow: hidden;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    }
+    .stat-card.blue::before { background: var(--accent); }
+    .stat-card.green::before { background: var(--green); }
+    .stat-card.yellow::before { background: var(--yellow); }
+    .stat-card.purple::before { background: var(--purple); }
+
+    .stat-icon { font-size: 28px; margin-bottom: 12px; }
+    .stat-value {
+      font-family: var(--font-display);
+      font-size: 32px; font-weight: 800;
+      letter-spacing: -1px; line-height: 1;
+    }
+    .stat-label { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+    /* ── SECTION TITLE ─────────────────────────── */
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 20px; font-weight: 700;
+      margin-bottom: 20px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1; height: 1px;
+      background: var(--border);
+    }
+
+    /* ── SUBJECTS GRID ─────────────────────────── */
+    .subjects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .subject-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px 20px;
+      cursor: pointer;
+      transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+      text-align: center;
+    }
+    .subject-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    }
+    .subject-icon { font-size: 36px; margin-bottom: 12px; }
+    .subject-name {
+      font-family: var(--font-display);
+      font-size: 15px; font-weight: 700;
+    }
+    .subject-count { color: var(--muted); font-size: 12px; margin-top: 4px; }
+
+    /* ── PROGRESS VIEW ─────────────────────────── */
+    .progress-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+    .progress-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+    }
+    .progress-card-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 16px;
+    }
+    .progress-topic { font-weight: 600; font-size: 15px; }
+    .progress-subject { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .progress-badge {
+      font-size: 11px; font-weight: 700;
+      padding: 4px 10px; border-radius: 20px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .badge-dominado { background: rgba(16,185,129,0.15); color: var(--green); }
+    .badge-reforcar { background: rgba(239,68,68,0.15); color: var(--red); }
+    .badge-em_progresso { background: rgba(245,158,11,0.15); color: var(--yellow); }
+
+    .progress-bar-wrap {
+      background: var(--bg);
+      border-radius: 999px; height: 6px;
+      overflow: hidden; margin-bottom: 10px;
+    }
+    .progress-bar-fill {
+      height: 100%; border-radius: 999px;
+      transition: width 0.6s ease;
+    }
+    .progress-stats { display: flex; gap: 16px; }
+    .progress-stat { font-size: 12px; color: var(--muted); }
+    .progress-stat strong { color: var(--text); }
+
+    /* ── TOPICS VIEW ───────────────────────────── */
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      color: var(--muted); font-size: 14px;
+      cursor: pointer; margin-bottom: 28px;
+      padding: 8px 0;
+      background: none; border: none;
+      transition: color var(--transition);
+    }
+    .back-btn:hover { color: var(--text); }
+
+    .topics-list { display: flex; flex-direction: column; gap: 12px; }
+    .topic-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer;
+      transition: transform var(--transition), border-color var(--transition);
+    }
+    .topic-item:hover { transform: translateX(4px); border-color: var(--accent); }
+    .topic-item-left { display: flex; align-items: center; gap: 16px; }
+    .topic-number {
+      width: 36px; height: 36px;
+      background: var(--bg); border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-weight: 700; font-size: 14px;
+      color: var(--muted);
+    }
+    .topic-name { font-weight: 600; font-size: 15px; }
+    .topic-qcount { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .topic-arrow { color: var(--muted); font-size: 18px; }
+
+    /* ── QUIZ VIEW ─────────────────────────────── */
+    .quiz-header { margin-bottom: 32px; }
+    .quiz-meta { color: var(--muted); font-size: 13px; margin-bottom: 4px; }
+    .quiz-progress-track {
+      height: 4px; background: var(--border); border-radius: 2px; margin-top: 12px;
+    }
+    .quiz-progress-fill {
+      height: 100%; background: var(--accent);
+      border-radius: 2px; transition: width 0.4s ease;
+    }
+
+    .question-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+    .question-difficulty {
+      display: inline-block;
+      font-size: 11px; font-weight: 700;
+      padding: 4px 10px; border-radius: 20px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+    .diff-facil { background: rgba(16,185,129,0.15); color: var(--green); }
+    .diff-medio { background: rgba(245,158,11,0.15); color: var(--yellow); }
+    .diff-dificil { background: rgba(239,68,68,0.15); color: var(--red); }
+
+    .question-statement {
+      font-size: 17px; line-height: 1.65;
+      font-weight: 400; color: var(--text);
+    }
+
+    .answers-list { display: flex; flex-direction: column; gap: 10px; }
+    .answer-btn {
+      padding: 16px 20px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text); font-family: var(--font-body);
+      font-size: 14px; text-align: left;
+      cursor: pointer;
+      display: flex; align-items: flex-start; gap: 14px;
+      transition: border-color var(--transition), background var(--transition);
+    }
+    .answer-btn:hover:not(:disabled) { border-color: var(--accent); background: var(--surface2); }
+    .answer-btn:disabled { cursor: default; }
+    .answer-btn.correct { border-color: var(--green); background: rgba(16,185,129,0.08); }
+    .answer-btn.incorrect { border-color: var(--red); background: rgba(239,68,68,0.08); }
+    .answer-btn.reveal-correct { border-color: var(--green); background: rgba(16,185,129,0.05); }
+
+    .answer-letter {
+      min-width: 28px; height: 28px;
+      border-radius: 8px; background: var(--surface2);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 12px; color: var(--muted);
+      flex-shrink: 0;
+    }
+    .answer-btn.correct .answer-letter { background: var(--green); color: #fff; }
+    .answer-btn.incorrect .answer-letter { background: var(--red); color: #fff; }
+    .answer-btn.reveal-correct .answer-letter { background: var(--green); color: #fff; }
+
+    .feedback-card {
+      border-radius: var(--radius);
+      padding: 16px 20px; margin-top: 16px;
+      font-size: 14px; line-height: 1.5;
+      display: none;
+    }
+    .feedback-card.correct { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.25); color: #6ee7b7; }
+    .feedback-card.incorrect { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: #fca5a5; }
+    .feedback-card.visible { display: block; }
+    .feedback-title { font-weight: 700; margin-bottom: 4px; }
+
+    .quiz-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 24px;
+    }
+    .btn-secondary {
+      padding: 12px 24px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text); font-family: var(--font-display);
+      font-size: 14px; font-weight: 600;
+      border-radius: var(--radius); cursor: pointer;
+      transition: var(--transition);
+    }
+    .btn-secondary:hover { border-color: var(--accent); }
+    .btn-next {
+      padding: 12px 28px;
+      background: var(--accent); color: #fff;
+      font-family: var(--font-display);
+      font-size: 14px; font-weight: 700;
+      border: none; border-radius: var(--radius); cursor: pointer;
+      transition: opacity var(--transition);
+      display: none;
+    }
+    .btn-next:hover { opacity: 0.85; }
+    .btn-next.visible { display: block; }
+
+    /* ── EMPTY STATES ──────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 24px;
+      color: var(--muted);
+    }
+    .empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-state h3 { font-family: var(--font-display); font-size: 20px; color: var(--text); margin-bottom: 8px; }
+    .empty-state p { font-size: 14px; }
+
+    /* ── NAV TABS ──────────────────────────────── */
+    .app-nav {
+      display: flex; gap: 4px;
+      padding: 4px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 32px;
+    }
+    .app-nav-btn {
+      flex: 1; padding: 10px 16px;
+      background: transparent; border: none;
+      color: var(--muted); font-family: var(--font-body);
+      font-size: 14px; font-weight: 500;
+      border-radius: 8px; cursor: pointer;
+      transition: var(--transition);
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .app-nav-btn.active { background: var(--accent); color: #fff; }
+
+    /* ── TOAST ─────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 20px;
+      font-size: 14px; z-index: 1000;
+      transform: translateY(100px); opacity: 0;
+      transition: all 0.3s ease;
+      max-width: 300px;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-color: var(--green); }
+    .toast.error { border-color: var(--red); }
+
+    /* ── LOADER ────────────────────────────────── */
+    .loader {
+      display: inline-block; width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── RESPONSIVE ────────────────────────────── */
+    @media (max-width: 600px) {
+      .dashboard-header h2 { font-size: 28px; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .subjects-grid { grid-template-columns: repeat(2, 1fr); }
+      .question-card { padding: 20px; }
+      .auth-card { padding: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══ AUTH SCREEN ══════════════════════════════ -->
+  <div id="auth-screen" class="screen">
+    <div class="auth-wrapper">
+      <div class="auth-logo">
+        <div class="logo-icon">🎯</div>
+        <h1>ENEM Study</h1>
+        <p>Sua plataforma inteligente de estudos</p>
+      </div>
+
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <button class="auth-tab active" onclick="switchTab('login')">Entrar</button>
+          <button class="auth-tab" onclick="switchTab('register')">Criar conta</button>
+        </div>
+
+        <div id="auth-error" class="auth-error"></div>
+
+        <!-- LOGIN -->
+        <div id="login-form">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="login-email" placeholder="seu@email.com" />
+          </div>
+          <div class="form-group">
+            <label>Senha</label>
+            <input type="password" id="login-password" placeholder="••••••••" />
+          </div>
+          <button class="btn-primary" id="btn-login" onclick="handleLogin()">Entrar na plataforma</button>
+        </div>
+
+        <!-- REGISTER -->
+        <div id="register-form" style="display:none">
+          <div class="form-group">
+            <label>Nome completo</label>
+            <input type="text" id="reg-name" placeholder="Seu nome" />
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="reg-email" placeholder="seu@email.com" />
+          </div>
+          <div class="form-group">
+            <label>Senha</label>
+            <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" />
+          </div>
+          <button class="btn-primary" id="btn-register" onclick="handleRegister()">Criar minha conta</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ APP SCREEN ═══════════════════════════════ -->
+  <div id="app-screen" class="screen">
+    <!-- Navbar -->
+    <nav class="navbar">
+      <div class="navbar-inner">
+        <div class="nav-logo">
+          <span>🎯</span> ENEM Study
+        </div>
+        <div class="nav-right">
+          <div class="nav-user">
+            <div class="nav-avatar" id="user-avatar">U</div>
+            <span id="user-name-nav">Usuário</span>
+          </div>
+          <button class="btn-ghost" onclick="logout()">Sair</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="app-content">
+
+      <!-- NAV TABS -->
+      <div class="app-nav">
+        <button class="app-nav-btn active" id="tab-home" onclick="showView('home')">🏠 Início</button>
+        <button class="app-nav-btn" id="tab-subjects" onclick="showView('subjects')">📚 Matérias</button>
+        <button class="app-nav-btn" id="tab-progress" onclick="showView('progress')">📈 Progresso</button>
+      </div>
+
+      <!-- ─── HOME VIEW ─── -->
+      <div id="view-home" class="view active">
+        <div class="dashboard-header">
+          <div class="greeting">Bom estudo!</div>
+          <h2 id="home-title">Olá, Estudante 👋</h2>
+          <p>Continue de onde parou e domine o ENEM.</p>
+        </div>
+
+        <div class="stats-row" id="stats-row">
+          <div class="stat-card blue">
+            <div class="stat-icon">📝</div>
+            <div class="stat-value" id="stat-answered">—</div>
+            <div class="stat-label">Questões respondidas</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-icon">✅</div>
+            <div class="stat-value" id="stat-correct">—</div>
+            <div class="stat-label">Acertos</div>
+          </div>
+          <div class="stat-card yellow">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-value" id="stat-accuracy">—</div>
+            <div class="stat-label">Taxa de acerto</div>
+          </div>
+          <div class="stat-card purple">
+            <div class="stat-icon">📚</div>
+            <div class="stat-value" id="stat-topics">—</div>
+            <div class="stat-label">Tópicos estudados</div>
+          </div>
+        </div>
+
+        <div class="section-title">Escolher matéria</div>
+        <div class="subjects-grid" id="home-subjects"></div>
+      </div>
+
+      <!-- ─── SUBJECTS VIEW ─── -->
+      <div id="view-subjects" class="view">
+        <div class="section-title">Todas as matérias</div>
+        <div class="subjects-grid" id="subjects-grid"></div>
+      </div>
+
+      <!-- ─── TOPICS VIEW ─── -->
+      <div id="view-topics" class="view">
+        <button class="back-btn" onclick="showView('subjects')">← Voltar para matérias</button>
+        <div class="section-title" id="topics-title">Conteúdos</div>
+        <div class="topics-list" id="topics-list"></div>
+      </div>
+
+      <!-- ─── QUIZ VIEW ─── -->
+      <div id="view-quiz" class="view">
+        <button class="back-btn" onclick="confirmExitQuiz()">← Sair do quiz</button>
+
+        <div class="quiz-header">
+          <div class="quiz-meta" id="quiz-meta">Questão 1 de 3</div>
+          <div class="quiz-progress-track">
+            <div class="quiz-progress-fill" id="quiz-progress-fill" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="question-card">
+          <span class="question-difficulty" id="q-difficulty"></span>
+          <p class="question-statement" id="q-statement"></p>
+        </div>
+
+        <div class="answers-list" id="answers-list"></div>
+
+        <div class="feedback-card" id="feedback-card">
+          <div class="feedback-title" id="feedback-title"></div>
+          <div id="feedback-body"></div>
+        </div>
+
+        <div class="quiz-nav">
+          <span id="quiz-score-live" style="color:var(--muted);font-size:13px;"></span>
+          <button class="btn-next" id="btn-next" onclick="nextQuestion()">Próxima →</button>
+        </div>
+      </div>
+
+      <!-- ─── PROGRESS VIEW ─── -->
+      <div id="view-progress" class="view">
+        <div class="section-title">Meu desempenho</div>
+        <div id="progress-container">
+          <div class="empty-state">
+            <div class="empty-icon">📊</div>
+            <h3>Sem dados ainda</h3>
+            <p>Responda questões para ver seu progresso aqui.</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.app-content -->
+  </div><!-- /#app-screen -->
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ═══ JAVASCRIPT ══════════════════════════════ -->
+  <script>
+    // ── CONFIG ──────────────────────────────────
+    const API = 'http://localhost:3333/api';
+    let token = localStorage.getItem('token');
+    let currentUser = null;
+
+    // Quiz state
+    let questions = [];
+    let currentQIndex = 0;
+    let quizScore = { correct: 0, wrong: 0 };
+    let answered = false;
+
+    // ── INIT ─────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      if (token) {
+        initApp();
+      } else {
+        showScreen('auth');
+      }
+    });
+
+    async function initApp() {
+      try {
+        const res = await apiFetch('/me');
+        currentUser = res.data.user;
+        showScreen('app');
+        setUserUI(currentUser);
+        loadHomeData();
+      } catch {
+        logout();
+      }
+    }
+
+    // ── AUTH ─────────────────────────────────────
+    function switchTab(tab) {
+      document.querySelectorAll('.auth-tab').forEach((t, i) => {
+        t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
+      });
+      document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+      document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
+      hideAuthError();
+    }
+
+    async function handleLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      const btn = document.getElementById('btn-login');
+      hideAuthError();
+
+      if (!email || !password) return showAuthError('Preencha todos os campos');
+
+      setLoading(btn, true);
+      try {
+        const res = await apiFetch('/login', 'POST', { email, password }, false);
+        token = res.data.token;
+        currentUser = res.data.user;
+        localStorage.setItem('token', token);
+        showScreen('app');
+        setUserUI(currentUser);
+        loadHomeData();
+      } catch (e) {
+        showAuthError(e.message);
+      } finally {
+        setLoading(btn, false, 'Entrar na plataforma');
+      }
+    }
+
+    async function handleRegister() {
+      const name = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const btn = document.getElementById('btn-register');
+      hideAuthError();
+
+      if (!name || !email || !password) return showAuthError('Preencha todos os campos');
+
+      setLoading(btn, true);
+      try {
+        const res = await apiFetch('/register', 'POST', { name, email, password }, false);
+        token = res.data.token;
+        currentUser = res.data.user;
+        localStorage.setItem('token', token);
+        showScreen('app');
+        setUserUI(currentUser);
+        loadHomeData();
+        showToast('Conta criada! Bons estudos! 🎯', 'success');
+      } catch (e) {
+        showAuthError(e.message);
+      } finally {
+        setLoading(btn, false, 'Criar minha conta');
+      }
+    }
+
+    function logout() {
+      token = null;
+      currentUser = null;
+      localStorage.removeItem('token');
+      showScreen('auth');
+    }
+
+    // ── APP VIEWS ────────────────────────────────
+    function showScreen(name) {
+      document.getElementById('auth-screen').classList.toggle('active', name === 'auth');
+      document.getElementById('app-screen').classList.toggle('active', name === 'app');
+    }
+
+    function showView(name) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById('view-' + name).classList.add('active');
+      document.querySelectorAll('.app-nav-btn').forEach(b => b.classList.remove('active'));
+      const tab = document.getElementById('tab-' + name);
+      if (tab) tab.classList.add('active');
+
+      if (name === 'progress') loadProgress();
+      if (name === 'subjects') loadSubjects();
+    }
+
+    function setUserUI(user) {
+      document.getElementById('user-name-nav').textContent = user.name.split(' ')[0];
+      document.getElementById('user-avatar').textContent = user.name[0].toUpperCase();
+      document.getElementById('home-title').textContent = `Olá, ${user.name.split(' ')[0]} 👋`;
+    }
+
+    // ── HOME DATA ────────────────────────────────
+    async function loadHomeData() {
+      loadProgress(true); // stats only
+      loadSubjectsInto('home-subjects');
+    }
+
+    async function loadSubjects() {
+      loadSubjectsInto('subjects-grid');
+    }
+
+    async function loadSubjectsInto(containerId) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '<div class="empty-state"><div class="loader"></div></div>';
+      try {
+        const res = await apiFetch('/subjects');
+        renderSubjects(res.data, container);
+      } catch {
+        container.innerHTML = '<div class="empty-state"><p>Erro ao carregar matérias.</p></div>';
+      }
+    }
+
+    function renderSubjects(subjects, container) {
+      if (!subjects.length) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><h3>Sem matérias</h3></div>';
+        return;
+      }
+      container.innerHTML = subjects.map(s => `
+        <div class="subject-card" onclick="loadTopics(${s.id}, '${escHtml(s.name)}', '${escHtml(s.icon || '📖')}')">
+          <div class="subject-icon">${s.icon || '📖'}</div>
+          <div class="subject-name">${escHtml(s.name)}</div>
+          <div class="subject-count">${s.topic_count} tópico${s.topic_count !== 1 ? 's' : ''}</div>
+        </div>
+      `).join('');
+    }
+
+    // ── TOPICS ───────────────────────────────────
+    async function loadTopics(subjectId, subjectName, icon) {
+      showView('topics');
+      document.getElementById('topics-title').textContent = `${icon} ${subjectName}`;
+      const list = document.getElementById('topics-list');
+      list.innerHTML = '<div class="empty-state"><div class="loader"></div></div>';
+
+      try {
+        const res = await apiFetch(`/subjects/${subjectId}/topics`);
+        renderTopics(res.data.topics);
+      } catch {
+        list.innerHTML = '<div class="empty-state"><p>Erro ao carregar tópicos.</p></div>';
+      }
+    }
+
+    function renderTopics(topics) {
+      const list = document.getElementById('topics-list');
+      const letters = ['A','B','C','D','E','F','G','H'];
+      if (!topics.length) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><h3>Sem tópicos</h3><p>Esta matéria ainda não tem conteúdos.</p></div>';
+        return;
+      }
+      list.innerHTML = topics.map((t, i) => `
+        <div class="topic-item" onclick="startQuiz(${t.id}, '${escHtml(t.name)}')">
+          <div class="topic-item-left">
+            <div class="topic-number">${letters[i] || (i+1)}</div>
+            <div>
+              <div class="topic-name">${escHtml(t.name)}</div>
+              <div class="topic-qcount">${t.question_count} questão${t.question_count !== 1 ? 'ões' : ''}</div>
+            </div>
+          </div>
+          <div class="topic-arrow">›</div>
+        </div>
+      `).join('');
+    }
+
+    // ── QUIZ ─────────────────────────────────────
+    async function startQuiz(topicId, topicName) {
+      showView('quiz');
+      document.getElementById('answers-list').innerHTML = '<div style="text-align:center;padding:40px"><div class="loader"></div></div>';
+
+      try {
+        const res = await apiFetch(`/topics/${topicId}/questions`);
+        questions = res.data;
+        currentQIndex = 0;
+        quizScore = { correct: 0, wrong: 0 };
+
+        if (!questions.length) {
+          document.getElementById('answers-list').innerHTML = '';
+          document.getElementById('q-statement').textContent = 'Nenhuma questão disponível para este tópico ainda.';
+          return;
+        }
+        renderQuestion();
+      } catch {
+        showToast('Erro ao carregar questões', 'error');
+        showView('topics');
+      }
+    }
+
+    function renderQuestion() {
+      answered = false;
+      const q = questions[currentQIndex];
+      const total = questions.length;
+      const letters = ['A', 'B', 'C', 'D', 'E'];
+
+      // Header
+      document.getElementById('quiz-meta').textContent = `Questão ${currentQIndex + 1} de ${total}`;
+      document.getElementById('quiz-progress-fill').style.width = `${((currentQIndex) / total) * 100}%`;
+      document.getElementById('quiz-score-live').textContent = `✅ ${quizScore.correct}  ❌ ${quizScore.wrong}`;
+
+      // Question
+      const diffMap = { facil: 'diff-facil', medio: 'diff-medio', dificil: 'diff-dificil' };
+      const diffLabel = { facil: 'Fácil', medio: 'Médio', dificil: 'Difícil' };
+      document.getElementById('q-difficulty').className = `question-difficulty ${diffMap[q.difficulty] || 'diff-medio'}`;
+      document.getElementById('q-difficulty').textContent = diffLabel[q.difficulty] || 'Médio';
+      document.getElementById('q-statement').textContent = q.statement;
+
+      // Answers
+      const answersEl = document.getElementById('answers-list');
+      answersEl.innerHTML = q.answers.map((a, i) => `
+        <button class="answer-btn" onclick="submitAnswer(${q.id}, ${a.id}, this)" data-answer-id="${a.id}">
+          <span class="answer-letter">${letters[i]}</span>
+          <span>${escHtml(a.text)}</span>
+        </button>
+      `).join('');
+
+      // Feedback & next btn
+      const fb = document.getElementById('feedback-card');
+      fb.className = 'feedback-card';
+      fb.classList.remove('visible');
+      document.getElementById('btn-next').classList.remove('visible');
+    }
+
+    async function submitAnswer(questionId, answerId, btnEl) {
+      if (answered) return;
+      answered = true;
+
+      // Disable all buttons
+      document.querySelectorAll('.answer-btn').forEach(b => b.disabled = true);
+
+      try {
+        const res = await apiFetch('/answers', 'POST', { question_id: questionId, answer_id: answerId });
+        const { is_correct, correct_answer_id, explanation } = res.data;
+
+        // Mark selected
+        btnEl.classList.add(is_correct ? 'correct' : 'incorrect');
+        btnEl.querySelector('.answer-letter').style.background = is_correct ? 'var(--green)' : 'var(--red)';
+        btnEl.querySelector('.answer-letter').style.color = '#fff';
+
+        // If wrong, highlight correct
+        if (!is_correct) {
+          document.querySelectorAll('.answer-btn').forEach(b => {
+            if (parseInt(b.dataset.answerId) === correct_answer_id) {
+              b.classList.add('reveal-correct');
+            }
+          });
+        }
+
+        // Update score
+        if (is_correct) quizScore.correct++;
+        else quizScore.wrong++;
+        document.getElementById('quiz-score-live').textContent = `✅ ${quizScore.correct}  ❌ ${quizScore.wrong}`;
+
+        // Feedback
+        const fb = document.getElementById('feedback-card');
+        fb.classList.add(is_correct ? 'correct' : 'incorrect', 'visible');
+        document.getElementById('feedback-title').textContent = is_correct ? '✅ Resposta correta!' : '❌ Resposta incorreta';
+        document.getElementById('feedback-body').textContent = explanation || (is_correct ? 'Parabéns! Continue assim.' : 'Não desista, tente os próximos!');
+
+        // Show next btn
+        const btnNext = document.getElementById('btn-next');
+        btnNext.classList.add('visible');
+        if (currentQIndex === questions.length - 1) {
+          btnNext.textContent = 'Ver resultado ✓';
+        } else {
+          btnNext.textContent = 'Próxima →';
+        }
+
+      } catch (e) {
+        showToast('Erro ao registrar resposta', 'error');
+        answered = false;
+        document.querySelectorAll('.answer-btn').forEach(b => b.disabled = false);
+      }
+    }
+
+    function nextQuestion() {
+      currentQIndex++;
+      if (currentQIndex >= questions.length) {
+        showQuizResult();
+      } else {
+        renderQuestion();
+      }
+    }
+
+    function showQuizResult() {
+      const total = questions.length;
+      const accuracy = Math.round((quizScore.correct / total) * 100);
+      const emoji = accuracy >= 80 ? '🏆' : accuracy >= 50 ? '💪' : '📖';
+      const msg = accuracy >= 80
+        ? 'Você domina este conteúdo!'
+        : accuracy >= 50
+        ? 'Bom progresso! Continue praticando.'
+        : 'Precisa reforçar este assunto.';
+
+      document.getElementById('view-quiz').innerHTML = `
+        <div style="text-align:center;padding:60px 24px">
+          <div style="font-size:64px;margin-bottom:20px">${emoji}</div>
+          <h2 style="font-family:var(--font-display);font-size:32px;font-weight:800;margin-bottom:8px">${accuracy}% de acerto</h2>
+          <p style="color:var(--muted);margin-bottom:8px">${quizScore.correct} de ${total} questões corretas</p>
+          <p style="color:var(--accent);font-weight:600;margin-bottom:36px">${msg}</p>
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+            <button class="btn-secondary" onclick="showView('subjects')">Estudar outra matéria</button>
+            <button class="btn-primary" style="width:auto;padding:12px 24px" onclick="showView('progress')">Ver meu progresso</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function confirmExitQuiz() {
+      if (answered || currentQIndex === 0) {
+        showView('topics');
+      } else if (confirm('Sair do quiz? Seu progresso parcial será salvo.')) {
+        showView('topics');
+      }
+    }
+
+    // ── PROGRESS ─────────────────────────────────
+    async function loadProgress(statsOnly = false) {
+      try {
+        const res = await apiFetch('/progress');
+        const { summary, topics } = res.data;
+
+        // Stats
+        document.getElementById('stat-answered').textContent = summary.total_answered ?? 0;
+        document.getElementById('stat-correct').textContent = summary.total_correct ?? 0;
+        document.getElementById('stat-accuracy').textContent = (summary.overall_accuracy ?? 0) + '%';
+        document.getElementById('stat-topics').textContent = summary.topics_studied ?? 0;
+
+        if (statsOnly) return;
+
+        const container = document.getElementById('progress-container');
+        if (!topics.length) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">📊</div>
+              <h3>Sem dados ainda</h3>
+              <p>Responda questões para ver seu progresso aqui.</p>
+            </div>`;
+          return;
+        }
+
+        container.innerHTML = `<div class="progress-grid">${topics.map(p => {
+          const acc = p.accuracy_rate ?? 0;
+          const total = (p.correct_count || 0) + (p.wrong_count || 0);
+          const statusLabel = { dominado: 'Dominado', reforcar: 'Reforçar', em_progresso: 'Em progresso' };
+          const color = p.status === 'dominado' ? 'var(--green)' : p.status === 'reforcar' ? 'var(--red)' : 'var(--yellow)';
+          return `
+            <div class="progress-card">
+              <div class="progress-card-header">
+                <div>
+                  <div class="progress-topic">${escHtml(p.topic_name)}</div>
+                  <div class="progress-subject">${escHtml(p.subject_icon || '')} ${escHtml(p.subject_name)}</div>
+                </div>
+                <span class="progress-badge badge-${p.status}">${statusLabel[p.status] || p.status}</span>
+              </div>
+              <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" style="width:${acc}%;background:${color}"></div>
+              </div>
+              <div class="progress-stats">
+                <div class="progress-stat"><strong>${acc}%</strong> acerto</div>
+                <div class="progress-stat"><strong>${p.correct_count}</strong> certas</div>
+                <div class="progress-stat"><strong>${p.wrong_count}</strong> erradas</div>
+                <div class="progress-stat"><strong>${total}</strong> total</div>
+              </div>
+            </div>
+          `;
+        }).join('')}</div>`;
+      } catch {
+        // silently fail for stats
+      }
+    }
+
+    // ── API FETCH ─────────────────────────────────
+    async function apiFetch(path, method = 'GET', body = null, auth = true) {
+      const headers = { 'Content-Type': 'application/json' };
+      if (auth && token) headers['Authorization'] = `Bearer ${token}`;
+
+      const opts = { method, headers };
+      if (body) opts.body = JSON.stringify(body);
+
+      const res = await fetch(API + path, opts);
+      const data = await res.json();
+
+      if (!data.success) throw new Error(data.message || 'Erro na requisição');
+      return data;
+    }
+
+    // ── HELPERS ───────────────────────────────────
+    function showAuthError(msg) {
+      const el = document.getElementById('auth-error');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+    function hideAuthError() {
+      document.getElementById('auth-error').style.display = 'none';
+    }
+
+    function setLoading(btn, loading, label) {
+      if (loading) {
+        btn.innerHTML = '<span class="loader"></span>';
+        btn.disabled = true;
+      } else {
+        btn.textContent = label;
+        btn.disabled = false;
+      }
+    }
+
+    let toastTimer;
+    function showToast(msg, type = '') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `toast ${type} show`;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function escHtml(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // Enter key for auth
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const loginVisible = document.getElementById('login-form').style.display !== 'none';
+        if (document.getElementById('auth-screen').classList.contains('active')) {
+          loginVisible ? handleLogin() : handleRegister();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
