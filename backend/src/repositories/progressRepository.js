@@ -1,4 +1,4 @@
-const { pool } = require('../databases/database');
+const { pool } = require('../config/database');
 
 class ProgressRepository {
   async findByUserId(userId) {
