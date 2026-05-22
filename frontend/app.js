@@ -1,5 +1,5 @@
 // ── CONFIG ──────────────────────────────────
-const API = "http://localhost:3333/api";
+const API = "https://smart-study-platform-production.up.railway.app";
 let token = localStorage.getItem("token");
 let currentUser = null;
 
